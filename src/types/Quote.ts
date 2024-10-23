@@ -6,4 +6,7 @@ export interface Quote {
     upvotes:number;
     downvotes:number;
     e:FormEvent;
+    userName:string
+    authorName:string
+    quoteText:string
 }

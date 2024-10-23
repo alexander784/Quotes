@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Quote } from '../types/Quote';
 
 interface QuoteContextType {
     quotes: Quote[];
-    addQuote: (text: string) => void;
+    addQuote: (text: string, userName: string, authorName: string) => void;
     upvoteQuote: (id: string) => void;
     downvoteQuote: (id: string) => void;
     deleteQuote: (id: string) => void;
@@ -14,34 +14,51 @@ const QuoteContext = createContext<QuoteContextType | undefined>(undefined);
 export const QuoteProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [quotes, setQuotes] = useState<Quote[]>([]);
 
-    const addQuote = (text: string) => {
+    useEffect(() => {
+        const storedQuotes = localStorage.getItem('quotes');
+        if (storedQuotes) {
+            setQuotes(JSON.parse(storedQuotes));
+        }
+    }, []);
+
+    const saveQuotesToLocalStorage = (quotes: Quote[]) => {
+        localStorage.setItem('quotes', JSON.stringify(quotes));
+    };
+
+    const addQuote = (text: string, userName: string, authorName: string) => {
         const newQuote: Quote = {
-            id: Math.random().toString(36).substr(2, 9), // Simple ID generation
+            id: Math.random().toString(36).substr(2, 9),
             text,
+            userName,
+            authorName,
             upvotes: 0,
             downvotes: 0,
         };
-        setQuotes((prevQuotes) => [...prevQuotes, newQuote]);
+        const updatedQuotes = [...quotes, newQuote];
+        setQuotes(updatedQuotes);
+        saveQuotesToLocalStorage(updatedQuotes);
     };
 
     const upvoteQuote = (id: string) => {
-        setQuotes((prevQuotes) =>
-            prevQuotes.map((quote) =>
-                quote.id === id ? { ...quote, upvotes: quote.upvotes + 1 } : quote
-            )
+        const updatedQuotes = quotes.map((quote) =>
+            quote.id === id ? { ...quote, upvotes: quote.upvotes + 1 } : quote
         );
+        setQuotes(updatedQuotes);
+        saveQuotesToLocalStorage(updatedQuotes);
     };
 
     const downvoteQuote = (id: string) => {
-        setQuotes((prevQuotes) =>
-            prevQuotes.map((quote) =>
-                quote.id === id ? { ...quote, downvotes: quote.downvotes + 1 } : quote
-            )
+        const updatedQuotes = quotes.map((quote) =>
+            quote.id === id ? { ...quote, downvotes: quote.downvotes + 1 } : quote
         );
+        setQuotes(updatedQuotes);
+        saveQuotesToLocalStorage(updatedQuotes); 
     };
 
     const deleteQuote = (id: string) => {
-        setQuotes((prevQuotes) => prevQuotes.filter((quote) => quote.id !== id));
+        const updatedQuotes = quotes.filter((quote) => quote.id !== id);
+        setQuotes(updatedQuotes);
+        saveQuotesToLocalStorage(updatedQuotes); 
     };
 
     return (
